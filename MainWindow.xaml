@@ -1,0 +1,329 @@
+<Window x:Class="IpInfo.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="IP 조회" Width="1180" Height="820" MinWidth="760" MinHeight="560"
+        WindowStartupLocation="CenterScreen"
+        Icon="pack://application:,,,/ipinfo.ico"
+        Background="{StaticResource Bg}" FontFamily="{StaticResource UiFont}" FontSize="15"
+        Foreground="{StaticResource Ink}"
+        UseLayoutRounding="True" TextOptions.TextFormattingMode="Display"
+        AllowDrop="True" PreviewDragEnter="Window_DragEnter" PreviewDragOver="Window_DragOver"
+        PreviewDragLeave="Window_DragLeave" PreviewDrop="Window_Drop"
+        Loaded="Window_Loaded">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- ── 상단 ── -->
+        <DockPanel Grid.Row="0" Margin="28,14,28,6" LastChildFill="False">
+            <Image Source="pack://application:,,,/ipinfo.png" Width="28" Height="28"
+                   RenderOptions.BitmapScalingMode="HighQuality" DockPanel.Dock="Left"/>
+            <TextBlock Text="IP 조회" FontSize="18" FontWeight="Bold" Margin="10,0,0,0"
+                       VerticalAlignment="Center" DockPanel.Dock="Left"/>
+            <Button x:Name="DataBtn" DockPanel.Dock="Right" Style="{StaticResource Btn}"
+                    Padding="11,5,14,5" Click="DataBtn_Click" ToolTip="데이터 현황·갱신">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd" CornerRadius="14" Background="{StaticResource Surface}"
+                                BorderBrush="{StaticResource Line}" BorderThickness="1"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource Muted}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Button.Template>
+                <StackPanel Orientation="Horizontal">
+                    <Ellipse x:Name="DataDot" Width="8" Height="8" Fill="{StaticResource Muted}"
+                             VerticalAlignment="Center"/>
+                    <TextBlock x:Name="DataText" Text="데이터 불러오는 중" FontSize="13"
+                               Foreground="{StaticResource Muted}" Margin="8,0,0,0"/>
+                </StackPanel>
+            </Button>
+        </DockPanel>
+
+        <!-- ── 본문 ── -->
+        <Grid Grid.Row="1" MaxWidth="1080" Margin="28,8,28,28">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- 입력창 -->
+            <Border x:Name="SearchBox" Grid.Row="0" Background="{StaticResource Surface}"
+                    CornerRadius="14" BorderThickness="1.5" Padding="18,8,8,8">
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Setter Property="BorderBrush" Value="{StaticResource Line}"/>
+                        <Style.Triggers>
+                            <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                                <Setter Property="BorderBrush" Value="{StaticResource Teal}"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock x:Name="Placeholder" Text="IP 주소를 입력하거나, 로그·엑셀 내용을 그대로 붙여넣으세요"
+                               Foreground="{StaticResource Muted}" VerticalAlignment="Top" Margin="2,11,0,0"
+                               IsHitTestVisible="False"/>
+                    <TextBox x:Name="Query" Grid.Column="0" FontFamily="{StaticResource IpFont}" FontSize="17"
+                             Background="Transparent" BorderThickness="0" AcceptsReturn="True"
+                             TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" MinHeight="44"
+                             MaxHeight="168" Padding="0,9" VerticalContentAlignment="Top"
+                             Foreground="{StaticResource Ink}" CaretBrush="{StaticResource Ink}"
+                             PreviewKeyDown="Query_PreviewKeyDown" TextChanged="Query_TextChanged"
+                             AutomationProperties.Name="조회할 IP"/>
+                    <Button Grid.Column="1" Content="조회" Style="{StaticResource PrimaryBtn}"
+                            Padding="22,10" FontWeight="Bold" VerticalAlignment="Top"
+                            Margin="10,0,0,0" Click="Run_Click"/>
+                </Grid>
+            </Border>
+
+            <DockPanel Grid.Row="1" Margin="4,8,4,0" LastChildFill="False">
+                <TextBlock Text="여러 줄을 붙여넣으면 IP만 골라 한 번에 조회합니다." FontSize="13"
+                           Foreground="{StaticResource Muted}" DockPanel.Dock="Left"/>
+                <Button Content="지우기" Style="{StaticResource LinkBtn}" DockPanel.Dock="Right"
+                        Margin="14,0,0,0" Click="Clear_Click"/>
+                <Button Content="파일에서 불러오기" Style="{StaticResource LinkBtn}" DockPanel.Dock="Right"
+                        Click="OpenFile_Click"/>
+            </DockPanel>
+
+            <!-- 결과 영역 -->
+            <Grid Grid.Row="2" Margin="0,28,0,0">
+
+                <!-- 처음 화면 -->
+                <Grid x:Name="IdlePanel" VerticalAlignment="Top" Margin="8,12,8,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid Width="172" Height="140" RenderTransformOrigin="0.5,0.5">
+                        <Grid.RenderTransform>
+                            <RotateTransform Angle="-4"/>
+                        </Grid.RenderTransform>
+                        <Rectangle RadiusX="12" RadiusY="12" Stroke="{StaticResource Line}"
+                                   StrokeThickness="3" StrokeDashArray="3 2"/>
+                        <TextBlock Text="??" FontFamily="{StaticResource StampFont}" FontWeight="Bold"
+                                   FontSize="76" Foreground="{StaticResource Line}"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Grid>
+                    <StackPanel Grid.Column="1" Margin="36,0,0,0" VerticalAlignment="Center">
+                        <TextBlock x:Name="IdleTitle" Text="어느 나라 IP인지 바로 확인하세요" FontSize="22"
+                                   FontWeight="Bold" Margin="0,0,0,6"/>
+                        <TextBlock x:Name="IdleText" TextWrapping="Wrap" MaxWidth="520" HorizontalAlignment="Left"
+                                   Foreground="{StaticResource Muted}" Margin="0,0,0,14"
+                                   Text="IP를 넣으면 국가코드와 소속 기관을 보여 줍니다. 방화벽·서버 로그를 통째로 붙여넣거나 파일을 끌어다 놓아도 됩니다."/>
+                        <StackPanel x:Name="Examples" Orientation="Horizontal">
+                            <Button Content="8.8.8.8" Tag="8.8.8.8" Click="Example_Click" Style="{StaticResource Btn}"
+                                    FontFamily="{StaticResource IpFont}" Padding="12,4" Margin="0,0,8,0"/>
+                            <Button Content="1.209.3.4" Tag="1.209.3.4" Click="Example_Click" Style="{StaticResource Btn}"
+                                    FontFamily="{StaticResource IpFont}" Padding="12,4" Margin="0,0,8,0"/>
+                            <Button Content="192.168.0.1" Tag="192.168.0.1" Click="Example_Click" Style="{StaticResource Btn}"
+                                    FontFamily="{StaticResource IpFont}" Padding="12,4"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
+
+                <!-- 데이터 없음 / 오류 -->
+                <Border x:Name="MessagePanel" Visibility="Collapsed" VerticalAlignment="Top"
+                        HorizontalAlignment="Left" MaxWidth="720" Background="{StaticResource Surface}"
+                        BorderBrush="{StaticResource Line}" BorderThickness="1" CornerRadius="16"
+                        Padding="34,30">
+                    <StackPanel>
+                        <TextBlock x:Name="MsgTitle" FontSize="22" FontWeight="Bold" Margin="0,0,0,8"/>
+                        <TextBlock x:Name="MsgText" TextWrapping="Wrap" Margin="0,0,0,4"/>
+                        <StackPanel x:Name="SetupSteps" Margin="0,10,0,0">
+                            <TextBlock TextWrapping="Wrap" Margin="0,0,0,6">
+                                1. 인터넷이 되는 PC에서 이 프로그램을 실행하고 <Bold>최신 데이터 받기</Bold>를 누릅니다.
+                            </TextBlock>
+                            <TextBlock TextWrapping="Wrap" Margin="0,0,0,6">
+                                2. 프로그램 옆에 생긴 <Bold>data</Bold> 폴더를 통째로 이 PC의 아래 위치에 복사합니다.
+                            </TextBlock>
+                            <Border Background="{StaticResource Surface2}" CornerRadius="6" Padding="8,3"
+                                    HorizontalAlignment="Left" Margin="16,0,0,8">
+                                <TextBlock x:Name="SetupPath" FontFamily="{StaticResource IpFont}" FontSize="13"
+                                           TextWrapping="Wrap"/>
+                            </Border>
+                            <TextBlock TextWrapping="Wrap" Margin="0,0,0,16">
+                                3. 복사한 뒤 <Bold>다시 불러오기</Bold>를 누릅니다.
+                            </TextBlock>
+                            <StackPanel Orientation="Horizontal">
+                                <Button Content="다시 불러오기" Style="{StaticResource Btn}" Click="Reload_Click"/>
+                                <Button Content="최신 데이터 받기" Style="{StaticResource PrimaryBtn}"
+                                        Margin="8,0,0,0" Click="Download_Click"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- IP 하나 -->
+                <ScrollViewer x:Name="SinglePanel" Visibility="Collapsed" VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <Border Background="{StaticResource Surface}" BorderBrush="{StaticResource Line}"
+                                BorderThickness="1" CornerRadius="16" Padding="36,32">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <ContentControl x:Name="BigStampHost" VerticalAlignment="Top" Focusable="False"/>
+                                <StackPanel Grid.Column="1" Margin="40,0,0,0">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock x:Name="SingleIp" FontFamily="{StaticResource IpFont}" FontSize="30"
+                                                   FontWeight="Bold" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                                        <Button Content="복사" Style="{StaticResource Btn}" FontSize="12"
+                                                Padding="10,3" Margin="12,0,0,0" VerticalAlignment="Center"
+                                                Foreground="{StaticResource Muted}" Click="CopyIp_Click"/>
+                                    </StackPanel>
+                                    <TextBlock x:Name="SingleCountry" FontSize="20" Margin="0,2,0,0"/>
+                                    <TextBlock x:Name="SingleSource" FontSize="13" Foreground="{StaticResource Muted}"
+                                               Margin="0,2,0,22"/>
+                                    <ItemsControl x:Name="SingleFacts" ItemTemplate="{StaticResource FactTemplate}"
+                                                  Focusable="False"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                        <Border x:Name="SingleNote" Visibility="Collapsed" Margin="0,14,0,0"
+                                Background="{StaticResource AmberBg}" CornerRadius="10" Padding="14,10">
+                            <TextBlock x:Name="SingleNoteText" TextWrapping="Wrap" FontSize="14"/>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- IP 여러 개 -->
+                <Grid x:Name="MultiPanel" Visibility="Collapsed">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <DockPanel Grid.Row="0" Margin="0,0,0,14" LastChildFill="False">
+                        <TextBlock x:Name="MultiTitle" FontSize="20" FontWeight="Bold" DockPanel.Dock="Left"
+                                   VerticalAlignment="Center"/>
+                        <TextBlock x:Name="MultiSub" Foreground="{StaticResource Muted}" DockPanel.Dock="Left"
+                                   Margin="16,0,0,0" VerticalAlignment="Center"/>
+                        <Button Content="CSV로 저장" Style="{StaticResource PrimaryBtn}" DockPanel.Dock="Right"
+                                Margin="8,0,0,0" Click="SaveCsv_Click"/>
+                        <Button Content="표 복사" Style="{StaticResource Btn}" DockPanel.Dock="Right"
+                                Click="CopyTable_Click"/>
+                    </DockPanel>
+                    <Border x:Name="MultiNote" Grid.Row="1" Visibility="Collapsed" Margin="0,0,0,14"
+                            Background="{StaticResource AmberBg}" CornerRadius="10" Padding="14,10">
+                        <TextBlock x:Name="MultiNoteText" TextWrapping="Wrap" FontSize="14"/>
+                    </Border>
+                    <WrapPanel x:Name="Filters" Grid.Row="2" Margin="0,0,0,8"/>
+                    <Border Grid.Row="3" Background="{StaticResource Surface}" BorderBrush="{StaticResource Line}"
+                            BorderThickness="1" CornerRadius="14" Padding="0,2">
+                        <DataGrid x:Name="ResultGrid" AutoGenerateColumns="False" IsReadOnly="True"
+                                  CanUserAddRows="False" CanUserDeleteRows="False" CanUserResizeRows="False"
+                                  SelectionMode="Single" SelectionUnit="FullRow" HeadersVisibility="Column"
+                                  GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="{StaticResource Line}"
+                                  Background="{StaticResource Surface}" BorderThickness="0" FontSize="14"
+                                  RowDetailsVisibilityMode="VisibleWhenSelected"
+                                  ColumnHeaderStyle="{StaticResource GridHeader}"
+                                  CellStyle="{StaticResource GridCell}" RowStyle="{StaticResource GridRow}"
+                                  EnableRowVirtualization="True" VirtualizingPanel.IsVirtualizing="True"
+                                  VirtualizingPanel.VirtualizationMode="Recycling"
+                                  ScrollViewer.CanContentScroll="True"
+                                  HorizontalScrollBarVisibility="Disabled">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="IP" Binding="{Binding Ip}" Width="190">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="FontFamily" Value="{StaticResource IpFont}"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+                                <DataGridTemplateColumn Header="국가" Width="230" SortMemberPath="Country">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal">
+                                                <Border BorderBrush="{Binding StampBrush}" BorderThickness="2"
+                                                        CornerRadius="6" Padding="6,1,6,0" MinWidth="40"
+                                                        VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding Country}" Foreground="{Binding StampBrush}"
+                                                               FontFamily="{StaticResource StampFont}" FontWeight="Bold"
+                                                               FontSize="13" HorizontalAlignment="Center"/>
+                                                </Border>
+                                                <TextBlock Text="{Binding CountryName}" Margin="8,0,0,0"
+                                                           VerticalAlignment="Center"/>
+                                                <TextBlock Visibility="{Binding RegVisibility}" Margin="10,0,0,0"
+                                                           VerticalAlignment="Center" FontSize="12"
+                                                           Foreground="{StaticResource Muted}"
+                                                           ToolTip="등록 국가가 실제 위치와 다릅니다 (클라우드·해외 리전 가능성)">
+                                                    <Run Text="등록"/>
+                                                    <Run Text="{Binding RegDiff, Mode=OneWay}" FontFamily="{StaticResource StampFont}"
+                                                         FontWeight="Bold" Foreground="{Binding RegBrush}"/>
+                                                </TextBlock>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTextColumn Header="소속" Binding="{Binding Org}" Width="*">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+                                <DataGridTextColumn Header="등록기관" Binding="{Binding Registry}" Width="100">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="{StaticResource Muted}"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+                                <DataGridTextColumn Header="구분" Binding="{Binding TypeShort}" Width="90">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="{StaticResource Muted}"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+                            </DataGrid.Columns>
+                            <DataGrid.RowDetailsTemplate>
+                                <DataTemplate>
+                                    <Border Background="{StaticResource Surface2}" Padding="66,10,18,8">
+                                        <StackPanel>
+                                            <ItemsControl ItemsSource="{Binding Facts}"
+                                                          ItemTemplate="{StaticResource FactTemplate}" Focusable="False"/>
+                                            <TextBlock Text="{Binding SourceText}" FontSize="13"
+                                                       Foreground="{StaticResource Muted}" Margin="0,0,0,6"/>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </DataGrid.RowDetailsTemplate>
+                        </DataGrid>
+                    </Border>
+                </Grid>
+            </Grid>
+        </Grid>
+
+        <!-- 파일 끌어놓기 안내 -->
+        <Grid x:Name="DropOverlay" Grid.RowSpan="2" Visibility="Collapsed" IsHitTestVisible="False">
+            <Rectangle Margin="12" RadiusX="20" RadiusY="20" Stroke="{StaticResource Teal}"
+                       StrokeThickness="3" StrokeDashArray="4 3" Fill="#E0E7ECF1"/>
+            <TextBlock Text="파일을 놓으면 안의 IP를 모두 조회합니다" FontSize="20" FontWeight="Bold"
+                       Foreground="{StaticResource Teal}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        </Grid>
+
+        <!-- 알림 -->
+        <Border x:Name="Toast" Grid.Row="1" VerticalAlignment="Bottom" HorizontalAlignment="Center"
+                Margin="0,0,0,24" Background="{StaticResource Ink}" CornerRadius="10" Padding="16,8"
+                Opacity="0" IsHitTestVisible="False">
+            <TextBlock x:Name="ToastText" Foreground="{StaticResource Surface}" FontSize="14"/>
+        </Border>
+    </Grid>
+</Window>

@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AssemblyName>ipinfo</AssemblyName>
+    <RootNamespace>IpInfo</RootNamespace>
+    <!-- exe 파일 자체에 박히는 아이콘 -->
+    <ApplicationIcon>ipinfo.ico</ApplicationIcon>
+    <Version>2.0.0</Version>
+    <Product>IP 조회</Product>
+    <AssemblyTitle>IP 조회 (오프라인)</AssemblyTitle>
+    <Description>폐쇄망용 오프라인 IP 국가코드·소속 조회</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- 아이콘을 exe에 리소스로 내장 (단일 파일에서도 안전) -->
+    <Resource Include="ipinfo.ico"/>
+    <Resource Include="ipinfo.png"/>
+  </ItemGroup>
+
+</Project>

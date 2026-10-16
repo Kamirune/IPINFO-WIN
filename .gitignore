@@ -1,0 +1,28 @@
+# ── 빌드 산출물 ──
+bin/
+obj/
+publish/
+dist/
+*.user
+
+# publish 결과물 (단일 exe 등)
+*.exe
+*.dll
+*.pdb
+
+# ── 조회 데이터 (용량이 크고 매일 바뀜) ──
+data/*
+!data/custom.csv
+
+# ── Visual Studio / VS Code ──
+.vs/
+.vscode/
+*.suo
+
+# ── OS ──
+Thumbs.db
+desktop.ini
+
+# ── 유지할 리소스 ──
+!ipinfo.ico
+!ipinfo.png

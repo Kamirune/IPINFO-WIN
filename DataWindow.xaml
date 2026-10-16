@@ -1,0 +1,82 @@
+<Window x:Class="IpInfo.DataWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="조회 데이터" Width="640" SizeToContent="Height" ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False"
+        Icon="pack://application:,,,/ipinfo.ico"
+        Background="{StaticResource Surface}" FontFamily="{StaticResource UiFont}" FontSize="14"
+        Foreground="{StaticResource Ink}" UseLayoutRounding="True"
+        TextOptions.TextFormattingMode="Display">
+    <StackPanel Margin="30,24,30,24">
+        <TextBlock Text="조회 데이터" FontSize="19" FontWeight="Bold" Margin="0,0,0,14"/>
+
+        <StackPanel x:Name="Counts" Orientation="Horizontal" Margin="0,0,0,14">
+            <StackPanel Margin="0,0,32,0">
+                <TextBlock Text="국가 할당 정보" FontSize="12" Foreground="{StaticResource Muted}"/>
+                <TextBlock x:Name="RirCount" FontFamily="{StaticResource StampFont}" FontSize="22" FontWeight="Bold"/>
+            </StackPanel>
+            <StackPanel Margin="0,0,32,0">
+                <TextBlock Text="소속(ASN) 정보" FontSize="12" Foreground="{StaticResource Muted}"/>
+                <TextBlock x:Name="AsnCount" FontFamily="{StaticResource StampFont}" FontSize="22" FontWeight="Bold"/>
+            </StackPanel>
+            <StackPanel Margin="0,0,32,0">
+                <TextBlock Text="위치 정보" FontSize="12" Foreground="{StaticResource Muted}"/>
+                <TextBlock x:Name="GeoCount" FontFamily="{StaticResource StampFont}" FontSize="22" FontWeight="Bold"/>
+            </StackPanel>
+            <StackPanel>
+                <TextBlock Text="내부 대역 이름" FontSize="12" Foreground="{StaticResource Muted}"/>
+                <TextBlock x:Name="CustomCount" FontFamily="{StaticResource StampFont}" FontSize="22" FontWeight="Bold"/>
+            </StackPanel>
+        </StackPanel>
+
+        <TextBlock x:Name="NoData" Text="불러온 데이터가 없습니다." Visibility="Collapsed" Margin="0,0,0,12"/>
+
+        <Border x:Name="NoGeo" Visibility="Collapsed" Background="{StaticResource AmberBg}" CornerRadius="10"
+                Padding="14,10" Margin="0,0,0,14">
+            <TextBlock TextWrapping="Wrap" FontSize="13"
+                       Text="실제 위치 DB가 없어 등록 국가로 표시하고 있습니다. 최신 데이터 받기를 누르면 위치 DB(dbip-country-lite.csv.gz)도 함께 받습니다."/>
+        </Border>
+
+        <ItemsControl x:Name="FileList" Focusable="False" Margin="0,0,0,14">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Border BorderBrush="{StaticResource Line}" BorderThickness="0,0,0,1" Padding="4,6">
+                        <DockPanel>
+                            <TextBlock Text="{Binding Date}" DockPanel.Dock="Right" FontSize="13"
+                                       Foreground="{StaticResource Muted}"/>
+                            <TextBlock Text="{Binding Name}" FontFamily="{StaticResource IpFont}" FontSize="13"/>
+                        </DockPanel>
+                    </Border>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <DockPanel Margin="0,0,0,4">
+            <TextBlock Text="데이터 폴더" FontSize="13" Foreground="{StaticResource Muted}"
+                       VerticalAlignment="Center" DockPanel.Dock="Left"/>
+            <Button Content="폴더 열기" Style="{StaticResource LinkBtn}" DockPanel.Dock="Right"
+                    VerticalAlignment="Center" Click="OpenFolder_Click"/>
+            <Border Background="{StaticResource Surface2}" CornerRadius="6" Padding="8,2" Margin="8,0,12,0"
+                    HorizontalAlignment="Left">
+                <TextBlock x:Name="FolderPath" FontFamily="{StaticResource IpFont}" FontSize="13"
+                           TextTrimming="CharacterEllipsis"/>
+            </Border>
+        </DockPanel>
+        <TextBlock FontSize="13" Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,4,0,0"
+                   Text="내부 대역 이름은 이 폴더의 custom.csv에 적습니다. 고친 뒤 다시 불러오기를 누르세요."/>
+        <TextBlock x:Name="Attribution" FontSize="12" Foreground="{StaticResource Muted}" Margin="0,10,0,0"/>
+
+        <TextBox x:Name="Log" Visibility="Collapsed" IsReadOnly="True" Margin="0,16,0,0"
+                 FontFamily="{StaticResource IpFont}" FontSize="12" Background="{StaticResource Surface2}"
+                 BorderThickness="0" Padding="10,8" MaxHeight="170" TextWrapping="Wrap"
+                 VerticalScrollBarVisibility="Auto"/>
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,18,0,0">
+            <Button x:Name="ReloadBtn" Content="다시 불러오기" Style="{StaticResource Btn}" Click="Reload_Click"/>
+            <Button x:Name="DownloadBtn" Content="인터넷에서 최신 데이터 받기" Style="{StaticResource Btn}"
+                    Margin="8,0,0,0" Click="Download_Click"/>
+            <Button Content="닫기" Style="{StaticResource PrimaryBtn}" Margin="8,0,0,0" IsCancel="True"
+                    Click="Close_Click"/>
+        </StackPanel>
+    </StackPanel>
+</Window>
